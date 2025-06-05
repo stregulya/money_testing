@@ -70,19 +70,13 @@ async function showCategoriesMenu(
     return await showCategoriesMenu(conversation, ctx);
   }
 
-  return await showCategoryAction(
-    conversation,
-    ctx,
-    selectedCategory.name,
-    selectedCategory.id
-  );
+  return await showCategoryAction(conversation, ctx, selectedCategory.name);
 }
 
 async function showCategoryAction(
   conversation: MyConversation,
   ctx: MyConversationContext,
-  categoryName: string,
-  categoryId: number
+  categoryName: string
 ) {
   const userId = ctx.from?.id!;
 

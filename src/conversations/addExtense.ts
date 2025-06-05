@@ -66,7 +66,7 @@ export async function addExtenseConversation(
   }
 
   await ctx.editMessageCaption({
-    caption: `Введите сумму:`,
+    caption: `Категория: ${selected}\nВведите сумму:`,
   });
 
   let amount: number | null = null;
@@ -76,22 +76,22 @@ export async function addExtenseConversation(
     amount = parseFloat(msgAmountString.message.text);
 
     if (isNaN(amount)) {
-      await ctx.reply(
-        "Пожалуйста, введи корректную сумму, например: `150.75`",
-        {
-          parse_mode: "Markdown",
-        }
-      );
+      await ctx.editMessageCaption({
+        caption: "Пожалуйста, введи корректную сумму, например: `150.75`",
+        parse_mode: "Markdown",
+      });
     }
   }
 
   await ctx.editMessageCaption({
-    caption: "Напиши комментарий или отправь '-', чтобы оставить его пустым",
+    caption: `Категория: ${selected}\nСумма: ${amount}руб.\nНапиши комментарий или отправь '-', чтобы оставить его пустым`,
   });
   const comment = await conversation.form.text();
 
   addExtense(ctx.from?.id!, amount, selected!, comment);
-  await ctx.reply("Успешно!");
+  await ctx.editMessageCaption({
+    caption: `Успешно!\nКатегория: ${selected}\nСумма: ${amount}руб.\nКомментарий: ${comment}`,
+  });
 
   const file = new InputFile("./src/imgs/main.png");
   await ctx.replyWithPhoto(file, {

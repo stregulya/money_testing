@@ -15,4 +15,31 @@ export function addExtense(
   stmt.run(uuid(), userId, amount, category, comment);
 }
 
-export function getExtense(userId: number) {}
+export function getExtense(userId: number): {
+  category: string;
+  amount: number;
+  comment: string;
+  date: Date;
+  id: string;
+}[] {
+  const stmt = db.prepare(
+    "SELECT category, amount, comment, date, id FROM expenses WHERE user_id = ?"
+  );
+  return (
+    stmt.all(userId) as {
+      category: string;
+      amount: number;
+      comment: string;
+      date: string;
+      id: string;
+    }[]
+  ).map((extense) => {
+    return {
+      category: extense.category,
+      amount: extense.amount,
+      comment: extense.comment,
+      date: new Date(extense.date),
+      id: extense.id,
+    };
+  });
+}
