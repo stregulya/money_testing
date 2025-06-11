@@ -1,17 +1,25 @@
 import "dotenv/config";
 import { initDB } from "./db/sqlite";
-import { Bot, Context, GrammyError, HttpError } from "grammy";
+import {
+  Bot,
+  Context,
+  GrammyError,
+  HttpError,
+  InputFile,
+  Keyboard,
+} from "grammy";
 import {
   Conversation,
   conversations,
   createConversation,
+  ReplayEngine,
   type ConversationFlavor,
 } from "@grammyjs/conversations";
 import { hydrate, HydrateFlavor } from "@grammyjs/hydrate";
-import { addExtenseConversation } from "./conversations/addExtense";
-import { start } from "./commands/start";
-import { editCategoriesConversation } from "./conversations/editCategoriesConversation";
-import { statsConversation } from "./conversations/statsConversation";
+import { newExtenseConversation } from "./conversations/newExtenseConversation";
+import { mainMenu } from "./keyboards/mainMenu";
+
+export const MAINIMAGE = new InputFile("src/imgs/main.png");
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 if (!BOT_TOKEN) {
@@ -25,33 +33,22 @@ export type MyConversationContext = HydrateFlavor<Context>;
 export type MyConversation = Conversation<MyContext, MyConversationContext>;
 
 const bot = new Bot<MyContext>(BOT_TOKEN);
-bot.api.setMyCommands([
-  {
-    command: "start",
-    description: "Запуск бота.",
-  },
-]);
-bot.use(conversations());
+
 bot.use(hydrate());
-bot.use(createConversation(addExtenseConversation));
-bot.use(createConversation(editCategoriesConversation));
-bot.use(createConversation(statsConversation));
+bot.use(conversations());
+bot.use(createConversation(newExtenseConversation));
 
-bot.command("start", start);
-
-bot.callbackQuery("add_extense", async (ctx) => {
-  await ctx.answerCallbackQuery();
-  await ctx.conversation.enter("addExtenseConversation");
+bot.command("start", async (ctx) => {
+  await ctx.replyWithPhoto(MAINIMAGE, {
+    caption:
+      "Привет, этот бот поможет тебя контролировать твои расходы.\nВоспользуйся кнопками⬇️",
+    reply_markup: mainMenu,
+  });
 });
 
-bot.callbackQuery("categories", async (ctx) => {
+bot.callbackQuery("new_extense", async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.conversation.enter("editCategoriesConversation");
-});
-
-bot.callbackQuery("stats", async (ctx) => {
-  await ctx.answerCallbackQuery();
-  await ctx.conversation.enter("statsConversation");
+  await ctx.conversation.enter("newExtenseConversation");
 });
 
 bot.catch((err) => {
