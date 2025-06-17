@@ -1,6 +1,13 @@
 import "dotenv/config";
 import { initDB } from "./db/sqlite";
-import { Bot, Context, GrammyError, HttpError, InputFile } from "grammy";
+import {
+  Bot,
+  Context,
+  GrammyError,
+  HttpError,
+  InputFile,
+  Keyboard,
+} from "grammy";
 import {
   Conversation,
   conversations,
@@ -36,6 +43,17 @@ bot.use(createConversation(categoriesConversation));
 bot.use(createConversation(expenseConversation));
 
 bot.command("start", async (ctx) => {
+  await ctx.reply("🏠 Меню", {
+    reply_markup: new Keyboard().text("🏠 Меню").persistent().resized(),
+  });
+  await ctx.replyWithPhoto(MAINIMAGE, {
+    caption:
+      "Привет, этот бот поможет тебя контролировать твои расходы.\nВоспользуйся кнопками⬇️",
+    reply_markup: mainMenu,
+  });
+});
+
+bot.hears("🏠 Меню", async (ctx) => {
   await ctx.replyWithPhoto(MAINIMAGE, {
     caption:
       "Привет, этот бот поможет тебя контролировать твои расходы.\nВоспользуйся кнопками⬇️",

@@ -3,6 +3,7 @@ import { MyConversation, MyConversationContext } from "../bot";
 import { getCategories } from "../db/categories.repo";
 import { backToMenu } from "../helpers/backToMenu";
 import { getAllExpense, getWeekExpense } from "../db/expense.repo";
+import { replyMenu } from "../helpers/replyMenu";
 
 export async function expenseConversation(
   conversation: MyConversation,
@@ -55,9 +56,17 @@ export async function expenseConversation(
     reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
   });
 
-  const actionCtx = await conversation.waitFor("callback_query:data");
+  const actionCtx = await conversation.waitFor([
+    "callback_query:data",
+    "message:text",
+  ]);
 
-  if (actionCtx.callbackQuery.data === "back_to_menu") {
+  if (actionCtx.message?.text === "🏠 Меню") {
+    await replyMenu(ctx);
+    return;
+  }
+
+  if (actionCtx.callbackQuery!.data === "back_to_menu") {
     await actionCtx.answerCallbackQuery();
 
     await backToMenu(ctx);

@@ -5,9 +5,11 @@ import { InlineKeyboard } from "grammy";
 import {
   addCategory,
   deleteCategory,
+  editCategory,
   getCategories,
 } from "../db/categories.repo";
 import { deleteMessage } from "../helpers/deleteUserMsg";
+import { replyMenu } from "../helpers/replyMenu";
 
 export async function categoriesConversation(
   conversation: MyConversation,
@@ -28,7 +30,17 @@ export async function categoriesConversation(
     reply_markup: categoriesKeyboard,
   });
 
-  const actionCtx = await conversation.waitFor("callback_query:data");
+  const actionCtx = await conversation.waitFor([
+    "callback_query:data",
+    "message:text",
+  ]);
+
+  if (actionCtx.message?.text === "🏠 Меню") {
+    await replyMenu(ctx);
+    return;
+  }
+
+  if (!actionCtx.callbackQuery) return;
 
   if (actionCtx.callbackQuery.data === "back_to_menu") {
     await actionCtx.answerCallbackQuery();
@@ -49,6 +61,11 @@ export async function categoriesConversation(
       "message:text",
       "callback_query:data",
     ]);
+
+    if (newCategoryCtx.message?.text === "🏠 Меню") {
+      await replyMenu(ctx);
+      return;
+    }
 
     if (
       newCategoryCtx.callbackQuery &&
@@ -87,15 +104,43 @@ export async function categoriesConversation(
     reply_markup: editKeyboard,
   });
 
-  const editCategoryCtx = await conversation.waitFor("callback_query:data");
+  const editCategoryCtx = await conversation.waitFor([
+    "callback_query:data",
+    "message:text",
+  ]);
+
+  if (editCategoryCtx.message?.text === "🏠 Меню") {
+    await replyMenu(ctx);
+    return;
+  }
+
   editCategoryCtx.answerCallbackQuery();
 
-  if (editCategoryCtx.callbackQuery.data === "back_to_menu") {
+  if (editCategoryCtx.callbackQuery!.data === "back_to_menu") {
     await conversation.rewind(checkpoint);
   }
 
-  if (editCategoryCtx.callbackQuery.data === "delete_category") {
+  if (editCategoryCtx.callbackQuery!.data === "delete_category") {
     deleteCategory(userId, selectedCategory.name);
+    await conversation.rewind(checkpoint);
+  }
+
+  if (editCategoryCtx.callbackQuery!.data === "edit_category") {
+    await ctx.editMessageCaption({
+      caption: "Введите новое название для категории:",
+    });
+
+    const newName = await conversation.waitFor("message:text");
+
+    if (editCategoryCtx.message?.text === "🏠 Меню") {
+      await replyMenu(ctx);
+      return;
+    }
+
+    editCategory(userId, selectedCategory.name, newName.msg.text);
+
+    await deleteMessage(newName);
+
     await conversation.rewind(checkpoint);
   }
 }

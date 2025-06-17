@@ -6,6 +6,7 @@ import { addCategory, getCategories } from "../db/categories.repo";
 import { backToMenu } from "../helpers/backToMenu";
 import { deleteMessage } from "../helpers/deleteUserMsg";
 import { addExpense } from "../db/expense.repo";
+import { replyMenu } from "../helpers/replyMenu";
 
 export async function newExpenseConversation(
   conversation: MyConversation,
@@ -26,15 +27,30 @@ export async function newExpenseConversation(
     reply_markup: categoriesKeyboard,
   });
 
-  const categoryCtx = await conversation.waitFor("callback_query:data");
+  const categoryCtx = await conversation.waitFor([
+    "callback_query:data",
+    "message:text",
+  ]);
+
+  if (categoryCtx.message?.text === "🏠 Меню") {
+    await replyMenu(ctx);
+    return;
+  }
+
   await categoryCtx.answerCallbackQuery();
 
-  if (categoryCtx.callbackQuery.data === "back_to_menu") {
+  if (
+    categoryCtx.callbackQuery &&
+    categoryCtx.callbackQuery.data === "back_to_menu"
+  ) {
     await backToMenu(categoryCtx);
     return;
   }
 
-  if (categoryCtx.callbackQuery.data === "new_category") {
+  if (
+    categoryCtx.callbackQuery &&
+    categoryCtx.callbackQuery.data === "new_category"
+  ) {
     await ctx.editMessageCaption({
       caption: "Введите название новой категории⬇️",
       reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
@@ -44,6 +60,11 @@ export async function newExpenseConversation(
       "message:text",
       "callback_query:data",
     ]);
+
+    if (newCategoryCtx.message?.text === "🏠 Меню") {
+      await replyMenu(ctx);
+      return;
+    }
 
     if (
       newCategoryCtx.callbackQuery &&
@@ -62,7 +83,7 @@ export async function newExpenseConversation(
     await conversation.rewind(startCheckpoint);
   }
 
-  const categoryId = categoryCtx.callbackQuery.data.replace("category_", "");
+  const categoryId = categoryCtx.callbackQuery?.data.replace("category_", "");
   const selectedCategory = getCategories(userId).find(
     (cat) => cat.id.toString() === categoryId
   );
@@ -82,6 +103,11 @@ export async function newExpenseConversation(
       "message:text",
       "callback_query:data",
     ]);
+
+    if (amountCtx.message?.text === "🏠 Меню") {
+      await replyMenu(ctx);
+      return;
+    }
 
     if (
       amountCtx.callbackQuery &&
@@ -113,6 +139,11 @@ export async function newExpenseConversation(
     "callback_query:data",
   ]);
 
+  if (commentCtx.message?.text === "🏠 Меню") {
+    await replyMenu(ctx);
+    return;
+  }
+
   if (
     commentCtx.callbackQuery &&
     commentCtx.callbackQuery.data === "back_to_menu"
@@ -122,7 +153,6 @@ export async function newExpenseConversation(
   }
 
   const comment = commentCtx.message?.text;
-
   await deleteMessage(commentCtx);
 
   addExpense(userId, amount, selectedCategory?.name!, comment!);
