@@ -3,11 +3,11 @@ import { MyConversation, MyConversationContext } from "../bot";
 import { getCategoriesKeyboard } from "../keyboards/categories";
 import { mainMenu } from "../keyboards/mainMenu";
 import { addCategory, getCategories } from "../db/categories.repo";
-import { addExtense } from "../db/expense.repo";
 import { backToMenu } from "../helpers/backToMenu";
 import { deleteMessage } from "../helpers/deleteUserMsg";
+import { addExpense } from "../db/expense.repo";
 
-export async function newExtenseConversation(
+export async function newExpenseConversation(
   conversation: MyConversation,
   ctx: MyConversationContext
 ) {
@@ -125,7 +125,7 @@ export async function newExtenseConversation(
 
   await deleteMessage(commentCtx);
 
-  addExtense(userId, amount, selectedCategory?.name!, comment!);
+  addExpense(userId, amount, selectedCategory?.name!, comment!);
 
   await ctx.editMessageCaption({
     caption:

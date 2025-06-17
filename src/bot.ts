@@ -9,9 +9,10 @@ import {
   type ConversationFlavor,
 } from "@grammyjs/conversations";
 import { hydrate, HydrateFlavor } from "@grammyjs/hydrate";
-import { newExtenseConversation } from "./conversations/newExtenseConversation";
 import { mainMenu } from "./keyboards/mainMenu";
 import { categoriesConversation } from "./conversations/categoriesConversation";
+import { expenseConversation } from "./conversations/expenseConversation";
+import { newExpenseConversation } from "./conversations/newExpenseConversation";
 
 export const MAINIMAGE = new InputFile("src/imgs/main.png");
 
@@ -30,8 +31,9 @@ const bot = new Bot<MyContext>(BOT_TOKEN);
 
 bot.use(hydrate());
 bot.use(conversations());
-bot.use(createConversation(newExtenseConversation));
+bot.use(createConversation(newExpenseConversation));
 bot.use(createConversation(categoriesConversation));
+bot.use(createConversation(expenseConversation));
 
 bot.command("start", async (ctx) => {
   await ctx.replyWithPhoto(MAINIMAGE, {
@@ -41,9 +43,14 @@ bot.command("start", async (ctx) => {
   });
 });
 
-bot.callbackQuery("new_extense", async (ctx) => {
+bot.callbackQuery("new_expense", async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.conversation.enter("newExtenseConversation");
+  await ctx.conversation.enter("newExpenseConversation");
+});
+
+bot.callbackQuery("expense", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  await ctx.conversation.enter("expenseConversation");
 });
 
 bot.callbackQuery("categories", async (ctx) => {

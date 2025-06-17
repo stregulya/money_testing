@@ -1,7 +1,7 @@
 import { db } from "./sqlite";
 import { v4 as uuid } from "uuid";
 
-export function addExtense(
+export function addExpense(
   userId: number,
   amount: number,
   category: string,
@@ -15,7 +15,7 @@ export function addExtense(
   stmt.run(uuid(), userId, amount, category, comment);
 }
 
-export function getAllExtenses(userId: number): {
+export function getAllExpense(userId: number): {
   category: string;
   amount: number;
   comment: string;
@@ -33,18 +33,18 @@ export function getAllExtenses(userId: number): {
       date: string;
       id: string;
     }[]
-  ).map((extense) => {
+  ).map((ex) => {
     return {
-      category: extense.category,
-      amount: extense.amount,
-      comment: extense.comment,
-      date: new Date(extense.date),
-      id: extense.id,
+      category: ex.category,
+      amount: ex.amount,
+      comment: ex.comment,
+      date: new Date(ex.date),
+      id: ex.id,
     };
   });
 }
 
-export function getWeekExtenses(userId: number): {
+export function getWeekExpense(userId: number): {
   category: string;
   amount: number;
   comment: string;
@@ -52,7 +52,7 @@ export function getWeekExtenses(userId: number): {
   id: string;
 }[] {
   const stmt = db.prepare(
-    "SELECT * FROM extenses WHERE user_id = ? AND date >= DATE('now', '-7 days')"
+    "SELECT * FROM expenses WHERE user_id = ? AND date >= DATE('now', '-7 days')"
   );
   return (
     stmt.all(userId) as {
@@ -62,13 +62,13 @@ export function getWeekExtenses(userId: number): {
       date: string;
       id: string;
     }[]
-  ).map((extense) => {
+  ).map((ex) => {
     return {
-      category: extense.category,
-      amount: extense.amount,
-      comment: extense.comment,
-      date: new Date(extense.date),
-      id: extense.id,
+      category: ex.category,
+      amount: ex.amount,
+      comment: ex.comment,
+      date: new Date(ex.date),
+      id: ex.id,
     };
   });
 }
