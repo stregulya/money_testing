@@ -91,8 +91,9 @@ export async function newExpenseConversation(
   const amountCheckpoint = conversation.checkpoint();
 
   await ctx.editMessageCaption({
-    caption: `Категория: ${selectedCategory?.name}\nВведи сумму в рублях:`,
+    caption: `Категория: ${selectedCategory?.name}\nВведи сумму в рублях, например \`1000\`:`,
     reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
+    parse_mode: "MarkdownV2",
   });
 
   let amount: number | null = null;
