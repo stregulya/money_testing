@@ -1,9 +1,11 @@
 import { InlineKeyboard } from "grammy";
-import { MAINIMAGE, MyConversation, MyConversationContext } from "../bot";
+import { MyConversation, MyConversationContext } from "../bot";
 import { getCategoriesKeyboard } from "../keyboards/categories";
 import { mainMenu } from "../keyboards/mainMenu";
 import { addCategory, getCategories } from "../db/categories.repo";
 import { addExtense } from "../db/expense.repo";
+import { backToMenu } from "../helpers/backToMenu";
+import { deleteMessage } from "../helpers/deleteUserMsg";
 
 export async function newExtenseConversation(
   conversation: MyConversation,
@@ -11,6 +13,8 @@ export async function newExtenseConversation(
 ) {
   const userId = ctx.from?.id;
   if (!userId) throw new Error("Не удалось получить userId");
+
+  const startCheckpoint = conversation.checkpoint();
 
   const categoriesKeyboard = getCategoriesKeyboard(userId);
   categoriesKeyboard
@@ -26,7 +30,7 @@ export async function newExtenseConversation(
   await categoryCtx.answerCallbackQuery();
 
   if (categoryCtx.callbackQuery.data === "back_to_menu") {
-    backToMenu(categoryCtx);
+    await backToMenu(categoryCtx);
     return;
   }
 
@@ -42,25 +46,20 @@ export async function newExtenseConversation(
     ]);
 
     if (
-      (newCategoryCtx.callbackQuery &&
-        newCategoryCtx.callbackQuery.data === "back_to_menu") ||
-      newCategoryCtx.message?.text === "📱Меню"
+      newCategoryCtx.callbackQuery &&
+      newCategoryCtx.callbackQuery.data === "back_to_menu"
     ) {
       await newCategoryCtx.answerCallbackQuery();
-      backToMenu(newCategoryCtx);
+      await backToMenu(newCategoryCtx);
       return;
     }
 
     const categoryName = newCategoryCtx.message?.text!;
     addCategory(userId, categoryName);
 
-    try {
-      newCategoryCtx.message?.delete();
-    } catch (error) {
-      console.error("Не удалось удалить сообщение: ", error);
-    }
+    await deleteMessage(newCategoryCtx);
 
-    await newExtenseConversation(conversation, categoryCtx);
+    await conversation.rewind(startCheckpoint);
   }
 
   const categoryId = categoryCtx.callbackQuery.data.replace("category_", "");
@@ -68,8 +67,10 @@ export async function newExtenseConversation(
     (cat) => cat.id.toString() === categoryId
   );
 
+  const amountCheckpoint = conversation.checkpoint();
+
   await ctx.editMessageCaption({
-    caption: `Категория: ${selectedCategory?.name}\nВведи сумму:`,
+    caption: `Категория: ${selectedCategory?.name}\nВведи сумму в рублях:`,
     reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
   });
 
@@ -87,8 +88,7 @@ export async function newExtenseConversation(
       amountCtx.callbackQuery.data === "back_to_menu"
     ) {
       amountCtx.answerCallbackQuery();
-      backToMenu(amountCtx);
-      await conversation.halt();
+      await conversation.rewind(startCheckpoint);
     }
 
     amount = parseFloat(amountCtx.message?.text!);
@@ -101,11 +101,7 @@ export async function newExtenseConversation(
     }
   }
 
-  try {
-    await amountCtx?.api.deleteMessage(amountCtx.chatId!, amountCtx.msgId!);
-  } catch (error) {
-    console.error("Не удалось удалить сообщение: ", error);
-  }
+  await deleteMessage(amountCtx!);
 
   await ctx.editMessageCaption({
     caption: `Категория: ${selectedCategory?.name}\nСумма: ${amount}руб.\nНапиши комментарий или отправь '-', чтобы оставить его пустым`,
@@ -122,17 +118,12 @@ export async function newExtenseConversation(
     commentCtx.callbackQuery.data === "back_to_menu"
   ) {
     commentCtx.answerCallbackQuery();
-    backToMenu(categoryCtx);
-    return;
+    await conversation.rewind(amountCheckpoint);
   }
 
   const comment = commentCtx.message?.text;
 
-  try {
-    await commentCtx?.api.deleteMessage(commentCtx.chatId!, commentCtx.msgId!);
-  } catch (error) {
-    console.error("Не удалось удалить сообщение: ", error);
-  }
+  await deleteMessage(commentCtx);
 
   addExtense(userId, amount, selectedCategory?.name!, comment!);
 
@@ -143,12 +134,4 @@ export async function newExtenseConversation(
   });
 
   return;
-}
-
-async function backToMenu(ctx: MyConversationContext) {
-  await ctx.editMessageCaption({
-    caption:
-      "Привет, этот бот поможет тебя контролировать твои расходы.\nВоспользуйся кнопками⬇️",
-    reply_markup: mainMenu,
-  });
 }

@@ -1,13 +1,6 @@
 import "dotenv/config";
 import { initDB } from "./db/sqlite";
-import {
-  Bot,
-  Context,
-  GrammyError,
-  HttpError,
-  InputFile,
-  Keyboard,
-} from "grammy";
+import { Bot, Context, GrammyError, HttpError, InputFile } from "grammy";
 import {
   Conversation,
   conversations,
@@ -18,6 +11,7 @@ import {
 import { hydrate, HydrateFlavor } from "@grammyjs/hydrate";
 import { newExtenseConversation } from "./conversations/newExtenseConversation";
 import { mainMenu } from "./keyboards/mainMenu";
+import { categoriesConversation } from "./conversations/categoriesConversation";
 
 export const MAINIMAGE = new InputFile("src/imgs/main.png");
 
@@ -37,6 +31,7 @@ const bot = new Bot<MyContext>(BOT_TOKEN);
 bot.use(hydrate());
 bot.use(conversations());
 bot.use(createConversation(newExtenseConversation));
+bot.use(createConversation(categoriesConversation));
 
 bot.command("start", async (ctx) => {
   await ctx.replyWithPhoto(MAINIMAGE, {
@@ -49,6 +44,11 @@ bot.command("start", async (ctx) => {
 bot.callbackQuery("new_extense", async (ctx) => {
   await ctx.answerCallbackQuery();
   await ctx.conversation.enter("newExtenseConversation");
+});
+
+bot.callbackQuery("categories", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  await ctx.conversation.enter("categoriesConversation");
 });
 
 bot.catch((err) => {
