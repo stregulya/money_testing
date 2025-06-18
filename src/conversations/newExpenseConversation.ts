@@ -27,10 +27,15 @@ export async function newExpenseConversation(
     reply_markup: categoriesKeyboard,
   });
 
-  const categoryCtx = await conversation.waitFor([
-    "callback_query:data",
-    "message:text",
-  ]);
+  const categoryCtx = await conversation.waitFor(
+    ["callback_query:data", "message:text"],
+    {
+      otherwise: async (ctx) =>
+        await ctx.reply(
+          "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+        ),
+    }
+  );
 
   if (categoryCtx.message?.text === "🏠 Меню") {
     await replyMenu(ctx);
@@ -56,10 +61,15 @@ export async function newExpenseConversation(
       reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
     });
 
-    const newCategoryCtx = await conversation.waitFor([
-      "message:text",
-      "callback_query:data",
-    ]);
+    const newCategoryCtx = await conversation.waitFor(
+      ["message:text", "callback_query:data"],
+      {
+        otherwise: async (ctx) =>
+          await ctx.reply(
+            "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+          ),
+      }
+    );
 
     if (newCategoryCtx.message?.text === "🏠 Меню") {
       await replyMenu(ctx);
@@ -100,10 +110,15 @@ export async function newExpenseConversation(
   let amountCtx;
 
   while (amount === null || isNaN(amount)) {
-    amountCtx = await conversation.waitFor([
-      "message:text",
-      "callback_query:data",
-    ]);
+    amountCtx = await conversation.waitFor(
+      ["message:text", "callback_query:data"],
+      {
+        otherwise: async (ctx) =>
+          await ctx.reply(
+            "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+          ),
+      }
+    );
 
     if (amountCtx.message?.text === "🏠 Меню") {
       await replyMenu(ctx);
@@ -135,10 +150,15 @@ export async function newExpenseConversation(
     reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
   });
 
-  const commentCtx = await conversation.waitFor([
-    "message:text",
-    "callback_query:data",
-  ]);
+  const commentCtx = await conversation.waitFor(
+    ["message:text", "callback_query:data"],
+    {
+      otherwise: async (ctx) =>
+        await ctx.reply(
+          "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+        ),
+    }
+  );
 
   if (commentCtx.message?.text === "🏠 Меню") {
     await replyMenu(ctx);

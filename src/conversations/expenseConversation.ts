@@ -56,10 +56,15 @@ export async function expenseConversation(
     reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
   });
 
-  const actionCtx = await conversation.waitFor([
-    "callback_query:data",
-    "message:text",
-  ]);
+  const actionCtx = await conversation.waitFor(
+    ["callback_query:data", "message:text"],
+    {
+      otherwise: async (ctx) =>
+        await ctx.reply(
+          "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+        ),
+    }
+  );
 
   if (actionCtx.message?.text === "🏠 Меню") {
     await replyMenu(ctx);

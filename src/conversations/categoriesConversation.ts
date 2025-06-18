@@ -30,10 +30,15 @@ export async function categoriesConversation(
     reply_markup: categoriesKeyboard,
   });
 
-  const actionCtx = await conversation.waitFor([
-    "callback_query:data",
-    "message:text",
-  ]);
+  const actionCtx = await conversation.waitFor(
+    ["callback_query:data", "message:text"],
+    {
+      otherwise: async (ctx) =>
+        await ctx.reply(
+          "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+        ),
+    }
+  );
 
   if (actionCtx.message?.text === "🏠 Меню") {
     await replyMenu(ctx);
@@ -57,10 +62,15 @@ export async function categoriesConversation(
       reply_markup: new InlineKeyboard().text("🔙Назад", "back_to_menu"),
     });
 
-    const newCategoryCtx = await conversation.waitFor([
-      "message:text",
-      "callback_query:data",
-    ]);
+    const newCategoryCtx = await conversation.waitFor(
+      ["message:text", "callback_query:data"],
+      {
+        otherwise: async (ctx) =>
+          await ctx.reply(
+            "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+          ),
+      }
+    );
 
     if (newCategoryCtx.message?.text === "🏠 Меню") {
       await replyMenu(ctx);
@@ -104,10 +114,15 @@ export async function categoriesConversation(
     reply_markup: editKeyboard,
   });
 
-  const editCategoryCtx = await conversation.waitFor([
-    "callback_query:data",
-    "message:text",
-  ]);
+  const editCategoryCtx = await conversation.waitFor(
+    ["callback_query:data", "message:text"],
+    {
+      otherwise: async (ctx) =>
+        await ctx.reply(
+          "Нажми кнопку меню внизу экрана или выбери предложенное дейстие"
+        ),
+    }
+  );
 
   if (editCategoryCtx.message?.text === "🏠 Меню") {
     await replyMenu(ctx);
